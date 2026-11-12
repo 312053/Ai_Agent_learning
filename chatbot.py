@@ -2,6 +2,7 @@ class ChatBot:
 
     def __init__(self, name):
         # 1. 保存机器人名称
+        self.name = name
 
         # 2. 创建一个空列表，用于保存聊天记录
         pass
