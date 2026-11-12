@@ -1,0 +1,48 @@
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# ===== 虚拟环境 =====
+.venv/
+venv/
+env/
+ENV/
+
+# ===== 打包/构建 =====
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+
+# ===== 测试/缓存 =====
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# ===== Jupyter =====
+.ipynb_checkpoints/
+
+# ===== IDE / 编辑器 =====
+.vscode/
+.idea/
+
+# ===== 操作系统 =====
+.DS_Store
+Thumbs.db
+
+# ===== 敏感信息 =====
+.env
+.env.local
+
+# ===== 日志 / 本地数据库 =====
+*.log
+*.sqlite3
+db.sqlite3
