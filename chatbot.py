@@ -5,6 +5,7 @@ class ChatBot:
         self.name = name
 
         # 2. 创建一个空列表，用于保存聊天记录
+        self.chat_history = []
         pass
 
     def chat(self, message):
