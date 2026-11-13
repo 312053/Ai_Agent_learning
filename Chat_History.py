@@ -1,3 +1,5 @@
+import json
+
 class ChatHistory:
 
     def __init__(self):
@@ -22,35 +24,20 @@ class ChatHistory:
     def clear(self):
         # 清空聊天记录
         self.history.clear()
-history = ChatHistory()
 
-# 测试正常添加
-history.add("user", "你好")
-history.add("assistant", "你好！")
+    def save(self, filename):
+        # TODO：将 self.history 保存到 filename
+        with open(filename, "w", encoding="utf-8") as f:
+            json.dump(self.history, f, ensure_ascii=False, indent=4)
 
-assert len(history.list()) == 2
+    def load(self, filename):
+        with open(filename, "r", encoding="utf-8") as f:
+            messages = json.load(f)
+            if not isinstance(messages, list):
+                raise ValueError("Invalid data format: expected a list")
+            self.history = messages
 
-# 测试清空
-history.clear()
-
-assert history.list() == []
-
-# 测试非法角色
-try:
-    history.add("admin", "你好")
-except ValueError:
-    print("非法角色测试通过")
-
-# 测试错误类型
-try:
-    history.add("user", 123)
-except TypeError:
-    print("类型错误测试通过")
-
-# 测试空消息
-try:
-    history.add("user", "   ")
-except ValueError:
-    print("空消息测试通过")
-
-print("测试结束")
+    def trim(self, max_history):
+    # TODO：只保留最近 max_history 条消息
+        self.history = self.history[-max_history:]
+        return self.history
