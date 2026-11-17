@@ -11,51 +11,61 @@ from openai import (
 )
 import time
 
-async def safe_ask(client, model, question):
-    try:
-        reply = await ask(client, model, question)
-        return {
-            "question": question, 
-            "status": "success", 
-            "message": reply
-            }
-    except AuthenticationError:
-        return {
-            "question": question, 
-            "status": "error", 
-            "message": "认证失败，请检查密钥与服务配置"
-            }
-    except RateLimitError:
-        return {
-            "question": question, 
-            "status": "error", 
-            "message": "请求受到限制，请检查限流或额度"
-            }
-    except APITimeoutError:
-        return {
-            "question": question, 
-            "status": "timeout", 
-            "message": "模型请求超时"
-            }
-    except APIConnectionError:
-        return {
-            "question": question, 
-            "status": "error", 
-            "message": "连接失败，请检查网络与接口地址"
-            }
-    except ValueError as e:
-        return {
-            "question": question, 
-            "status": "error", 
-            "message": str(e)
-            }
+async def safe_ask(client, model, question, system_prompt):
+    for attempt in range(1, 4):
+        try:
+            reply = await ask(client, model, question, system_prompt)
+            return {
+                "question": question, 
+                "status": "success", 
+                "message": reply
+                }
+        except AuthenticationError:
+            return {
+                "question": question, 
+                "status": "error", 
+                "message": "认证失败，请检查密钥与服务配置"
+                }
+        except RateLimitError:
+            return {
+                "question": question, 
+                "status": "error", 
+                "message": "请求受到限制，请检查限流或额度"
+                }
+        except APITimeoutError:
+            if attempt < 3:
+                print(f"第{attempt}次请求超时，1秒后重试")
+                await asyncio.sleep(1)
+            else:
+                return {
+                    "question": question, 
+                    "status": "timeout", 
+                    "message": "模型请求超时"
+                    }
+        except APIConnectionError:
+            if attempt < 3:
+                print(f"第{attempt}次连接失败，1秒后重试")
+                await asyncio.sleep(1)
+            else:
+                return {
+                    "question": question, 
+                    "status": "error", 
+                    "message": "连接失败，请检查网络与接口地址"
+                    }
+        except ValueError as e:
+            return {
+                "question": question, 
+                "status": "error", 
+                "message": str(e)
+                }
 
 
-async def ask(client, model, question):
+async def ask(client, model, question, system_prompt):
     response = await client.chat.completions.create(
         model=model,
         messages=[
-            {"role":"user", "content":question}
+            {"role":"system", "content":system_prompt},
+            {"role":"user", "content":question},
         ]
     )
     if not response.choices:
@@ -83,6 +93,11 @@ async def main():
     "用一句话解释什么是协程。",
     "用一句话解释 Python asyncio 中的事件循环。",
 ]
+    system_prompt = (
+    "你是 Python 助教，面向初学者，用中文回答。"
+    "每次用两条编号要点回答：1.定义；2.一个生活类比。"
+    "不提供代码。"
+)
 
     async with AsyncOpenAI(
         api_key = api_key,
@@ -92,9 +107,9 @@ async def main():
 ) as client:
         start = time.perf_counter()
         results = await asyncio.gather(
-            safe_ask(client, qwen_model, questions[0]),
-            safe_ask(client, qwen_model, questions[1]),
-            safe_ask(client, qwen_model, questions[2]),
+            safe_ask(client, qwen_model, questions[0], system_prompt),
+            safe_ask(client, qwen_model, questions[1], system_prompt),
+            safe_ask(client, qwen_model, questions[2], system_prompt),
         )
         elapsed = time.perf_counter() - start
         for result in results:
